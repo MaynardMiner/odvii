@@ -38,6 +38,8 @@ This allows fast and easy parsing for stats- particularly through Powershell:
 > Gpu 1 Temp                     69
 ```
 
+GPU numbers are based on AMD cards, so GPU 0 would be first AMD card (in lowed Bus #)
+
 Known issue:
 
 Some manufacturers set max fan settings incorrectly. This can result in higher than normal fan percentage,
