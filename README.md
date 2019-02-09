@@ -17,8 +17,12 @@ Gpu 1 Name= Radeon RX 580 Series
 Gpu 1 RPM=2056
 Gpu 1 Fan=59
 Gpu 1 Watts=136
-Gpu 1 Temp=68
+Gpu 1 Temp=62
 ```
+
+RPM is fan rpm.
+
+Fan is % speed reading.
 
 This allows fast and easy parsing for stats- particularly through Powershell:
 
