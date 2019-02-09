@@ -7,6 +7,7 @@ odvii.exe s
 
 Will produce current stats for all your AMD GPU's
 
+```
 Gpu 0 Name= Radeon RX Vega
 Gpu 0 RPM=2700
 Gpu 0 Fan=82
@@ -17,7 +18,7 @@ Gpu 1 RPM=2056
 Gpu 1 Fan=59
 Gpu 1 Watts=136
 Gpu 1 Temp=68
-
+```
 
 This allows fast and easy parsing for stats- particularly through Powershell:
 
