@@ -2711,6 +2711,55 @@ typedef struct ADLODNFanControl
 	int iMinFanLimit;
 } ADLODNFanControl;
 
+//structs used in driver 18.12.2
+//Use for ADL2_OverdriveN_SettingsExt_Get and ADL2_OverdriveN_SettingsExt_Set
+typedef struct ADLODNExtInfoRange
+{
+	int Unknown1; // id?  =0x20 for points
+	int Min;
+	int Max;
+	int Unknown2; //=1 Enabled?
+	int Default;  //default value - use for reset
+} ADLODNExtInfoRange;
+
+typedef struct ADLODNCurveInfoPoint
+{
+	ADLODNExtInfoRange Temp;
+	ADLODNExtInfoRange Percentage;
+} ADLODNCurveInfoPoint;
+
+typedef struct ADLODNExtSettingsInfo
+{
+	ADLODNExtInfoRange MemTimingLevel; //int  ,  min 0 max 2 default 0     id=1
+	ADLODNExtInfoRange ZeroRPM;		   // bool,  min 0 max 1 default 1         id=2
+	ADLODNExtInfoRange Unknown1;	   // bool,  min 0 max 1 default 0         id=4
+	ADLODNExtInfoRange Unknown2;	   // bool,  min 0 max 1 default 0         id=8
+	ADLODNExtInfoRange Unknown3;	   // bool,  min 0 max 1 default 0         id=10
+	ADLODNCurveInfoPoint Point[5];	 //   id=20
+} ADLODNExtSettingsInfo;
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+//structs used in driver 18.12.2
+//Use for ADL2_OverdriveN_SettingsExt_Get and ADL2_OverdriveN_SettingsExt_Set
+typedef struct ADLODNFanCurvePoint
+{
+	int Temp;
+	int Percentage;
+} ADLODNFanCurvePoint;
+
+typedef struct ADLODNExtSettings
+{
+	int MemTimingLevel; // Memory Timing Level  0-Auto, 1- Level 1, 2- Level 2 and so on...
+	int ZeroRPM;		// Zero RPM 0-off  1-on
+	int Unknown1;		// Lock EntireOverclockApi? 0-unlocked? 1-locked?  Error -1 na inne api (power gpu i mem)
+	int Unknown2;		// Locks EntireOverclockApi?  j.w. 1 blokuje api
+	int Unknown3;		// Locks EntireOverclockApi?  j.w. 1 blokuje api
+	ADLODNFanCurvePoint Point[5];
+} ADLODNExtSettings;
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+// Definitions of the used function pointers. Add more if you use other ADL APIs
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 ///\brief Structure containing information about Overdrive N power limit.
 ///

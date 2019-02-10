@@ -27,54 +27,6 @@ using namespace std;
 // #define PRINTF
 #define PRINTF printf
 
-//structs used in driver 18.12.2
-//Use for ADL2_OverdriveN_SettingsExt_Get and ADL2_OverdriveN_SettingsExt_Set
-typedef struct ADLODNExtInfoRange
-{
-	int Unknown1; // id?  =0x20 for points
-	int Min;
-	int Max;
-	int Unknown2; //=1 Enabled?
-	int Default;  //default value - use for reset
-} ADLODNExtInfoRange;
-
-typedef struct ADLODNCurveInfoPoint
-{
-	ADLODNExtInfoRange Temp;
-	ADLODNExtInfoRange Percentage;
-} ADLODNCurveInfoPoint;
-
-typedef struct ADLODNExtSettingsInfo
-{
-	ADLODNExtInfoRange MemTimingLevel; //int  ,  min 0 max 2 default 0     id=1
-	ADLODNExtInfoRange ZeroRPM;		   // bool,  min 0 max 1 default 1         id=2
-	ADLODNExtInfoRange Unknown1;	   // bool,  min 0 max 1 default 0         id=4
-	ADLODNExtInfoRange Unknown2;	   // bool,  min 0 max 1 default 0         id=8
-	ADLODNExtInfoRange Unknown3;	   // bool,  min 0 max 1 default 0         id=10
-	ADLODNCurveInfoPoint Point[5];	 //   id=20
-} ADLODNExtSettingsInfo;
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-//structs used in driver 18.12.2
-//Use for ADL2_OverdriveN_SettingsExt_Get and ADL2_OverdriveN_SettingsExt_Set
-typedef struct ADLODNFanCurvePoint
-{
-	int Temp;
-	int Percentage;
-} ADLODNFanCurvePoint;
-
-typedef struct ADLODNExtSettings
-{
-	int MemTimingLevel; // Memory Timing Level  0-Auto, 1- Level 1, 2- Level 2 and so on...
-	int ZeroRPM;		// Zero RPM 0-off  1-on
-	int Unknown1;		// Lock EntireOverclockApi? 0-unlocked? 1-locked?  Error -1 na inne api (power gpu i mem)
-	int Unknown2;		// Locks EntireOverclockApi?  j.w. 1 blokuje api
-	int Unknown3;		// Locks EntireOverclockApi?  j.w. 1 blokuje api
-	ADLODNFanCurvePoint Point[5];
-} ADLODNExtSettings;
-/////////////////////////////////////////////////////////////////////////////////////////////
-
-// Definitions of the used function pointers. Add more if you use other ADL APIs
 typedef int (*ADL2_MAIN_CONTROL_CREATE)(ADL_MAIN_MALLOC_CALLBACK, int, ADL_CONTEXT_HANDLE *);
 typedef int (*ADL2_MAIN_CONTROL_DESTROY)(ADL_CONTEXT_HANDLE);
 typedef int (*ADL_MAIN_CONTROL_CREATE)(ADL_MAIN_MALLOC_CALLBACK, int);
@@ -100,8 +52,8 @@ typedef int (*ADL2_OVERDRIVE6_CURRENTPOWER_GET)(ADL_CONTEXT_HANDLE, int iAdapter
 typedef int (*ADL2_OVERDRIVE5_FANSPEED_GET)(ADL_CONTEXT_HANDLE, int, int, ADLFanSpeedValue *);
 typedef int (*ADL_OVERDRIVE5_FANSPEEDINFO_GET)(int, int, ADLFanSpeedInfo *);
 typedef int (*ADL_OVERDRIVE5_FANSPEED_SET)(int, int, ADLFanSpeedValue *lpFanSpeedValue);
-typedef int (*ADL2_OVERDRIVEN_SETTINGSEXT_GET)(ADL_CONTEXT_HANDLE, int, int *, int *, int *, int *);
-typedef int (*ADL2_OVERDRIVEN_SETTINGSEXT_SET)(ADL_CONTEXT_HANDLE, int, int, ADLODNExtSettings *, ADLODNExtSettings *);
+typedef int(*ADL2_OVERDRIVEN_SETTINGSEXT_GET) (ADL_CONTEXT_HANDLE, int, int64_t*, int64_t*, int64_t*, int64_t*);
+typedef int(*ADL2_OVERDRIVEN_SETTINGSEXT_SET) (ADL_CONTEXT_HANDLE, int, int, ADLODNExtSettings*, ADLODNExtSettings*);
 
 HINSTANCE hDLL;
 
@@ -311,6 +263,28 @@ int printODStats(int type, int maxrpm)
 		int index = adapter[i];
 		string name = lpadapter[i];
 
+
+		ADLODNExtSettings *ExtCurrent = new ADLODNExtSettings;
+		memset(ExtCurrent, 0, sizeof(ADLODNExtSettings));
+		ADLODNExtSettingsInfo *ExtInfo = new ADLODNExtSettingsInfo;
+		memset(ExtCurrent, 0, sizeof(ADLODNExtSettings));
+		int64_t Unknown = 0;
+		int64_t sSize = 0x0F;  // (points x 2)+5  sizeof(ADLODNExtSettings)/sizeof(int)
+		int64_t ADLODNExtSettingsInfo_ptr = 0;
+		int64_t ADLODNExtSettings_ptr = 0;  //0x23   //0x0F
+
+		if (ADL_OK == ADL2_OverdriveN_SettingsExt_Get(context, index, &Unknown, &sSize, &ADLODNExtSettingsInfo_ptr, &ADLODNExtSettings_ptr))
+		{
+		 memcpy(ExtCurrent, (ADLODNExtSettings*)ADLODNExtSettings_ptr, sizeof(ADLODNExtSettings));
+		 memcpy(ExtInfo, (ADLODNExtSettingsInfo*)ADLODNExtSettingsInfo_ptr, sizeof(ADLODNExtSettingsInfo));
+		 free((ADLODNExtSettingsInfo*)ADLODNExtSettingsInfo_ptr);
+		 free((ADLODNExtSettings*)ADLODNExtSettings_ptr);
+		}
+		else
+		{
+		 std::cout << "Gpu " << cnt << " Errors=" << "ADL2_OverdriveN_SettingsExt_Get is failed. Are drivers at least 18.12.1 or greater?" << std::endl;
+		}
+
 		ADLODNCapabilities overdriveCapabilities;
 		memset(&overdriveCapabilities, 0, sizeof(ADLODNCapabilities));
 
@@ -358,8 +332,7 @@ int printODStats(int type, int maxrpm)
 
 		if (ADL_OK != ADL2_OverdriveN_MemoryClocks_Get(context, index, odMemPerformanceLevels))
 		{
-			std::cout << "Gpu " << cnt << " Errors="
-					  << "ADL2_OverdriveN_MemoryClocks_Get has failed" << std::endl;
+			std::cout << "Gpu " << cnt << " Errors="<< "ADL2_OverdriveN_MemoryClocks_Get has failed" << std::endl;
 		}
 
 		ADLFanSpeedValue FanSpeedValue = {0};
@@ -380,18 +353,7 @@ int printODStats(int type, int maxrpm)
 					  << "ADL_Overdrive5_FanSpeedInfo_Get has failed" << std::endl;
 		}
 
-		if (maxrpm == -1)
-		{
-			fanmax = overdriveCapabilities.fanSpeed.iMax;
-		}
-		else
-		{
-			fanmax = maxrpm;
-		}
-		current = FanSpeedValue.iFanSpeed;
-		diff = current / fanmax;
-		x = diff * 100;
-		fanspeed = ceil(x);
+		int level = 4;
 
 		std::cout << "Gpu " << cnt << " Model= " << name << std::endl;
 		std::cout << "Gpu " << cnt << " P5 Voltage= " << odClockPerformanceLevels->aLevels[5].iVddc << std::endl;
@@ -408,7 +370,7 @@ int printODStats(int type, int maxrpm)
 		}
 
 		std::cout << "Gpu " << cnt << " RPM=" << FanSpeedValue.iFanSpeed << std::endl;
-		std::cout << "Gpu " << cnt << " Fan=" << fanspeed << std::endl;
+		std::cout << "Gpu " << cnt << " Fan=" << ExtCurrent->Point[level].Percentage << std::endl;
 		std::cout << "Gpu " << cnt << " Watts=" << Watts / 256 << std::endl;
 		std::cout << "Gpu " << cnt << " Temp=" << Temp / 1000 << std::endl;
 		std::cout << "" << std::endl;
