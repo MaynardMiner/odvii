@@ -1,4 +1,11 @@
 # odvii
+
+This tool was created for use with SWARM.
+
+https://github.com/MaynardMiner/SWARM
+
+You are welcome to use this software, and distribute FREE at not cost.
+
 odvii - command line tool for windows AMD ADL.
 
 To use:
